@@ -22,7 +22,6 @@
         .badge-approved { background: #dcfce7; color: #166534; }
         .final-panel { background: #fffbeb; padding: 20px; border-radius: 10px; margin-top: 20px; border: 2px dashed #f59e0b; }
         .btn-approve { background: #10b981; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; }
-        #auth-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 9999; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
@@ -32,14 +31,6 @@
     </a>
     <span style="color: #0284c7; font-weight: 800;">📝 PHÒNG CHẤM ĐIỂM V6.0</span>
 </div>
-
-    <div id="auth-overlay">
-        <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 300px;">
-            <h2 style="color: var(--primary); margin-top: 0;">👨‍🏫 Xác thực Thầy Cô</h2>
-            <input type="password" id="admin-pass" placeholder="Nhập mã Admin..." style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; text-align: center;">
-            <button onclick="checkAuth()" style="width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">VÀO PHÒNG CHẤM BÀI</button>
-        </div>
-    </div>
 
     <header>
         <h2 style="margin:0; color: var(--primary);">🌟 PHÒNG CHẤM BÀI V6.0</h2>
@@ -64,12 +55,10 @@
     if (!firebase.apps.length) firebase.initializeApp(DB_CONFIG);
     const db = firebase.firestore();
 
-    function checkAuth() {
-        if (document.getElementById("admin-pass").value === "172108") {
-            document.getElementById("auth-overlay").style.display = "none";
-            initListener();
-        } else { alert("Sai mã bảo mật!"); }
-    }
+    // Tự động khởi chạy khi mở trang
+    window.onload = function() {
+        initListener();
+    };
 
     function initListener() {
         db.collection("KET_QUA").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
