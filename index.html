@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Trị Lớp 4A</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #0284c7;
+            --bg: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .dashboard {
+            width: 90%;
+            max-width: 1000px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 2.2rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 30px -10px rgba(2, 132, 199, 0.2);
+            border-color: var(--accent);
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        /* Màu sắc riêng cho từng nút */
+        .card-grading .icon-circle { background: #e0f2fe; color: #0284c7; }
+        .card-report .icon-circle { background: #dcfce7; color: #16a34a; }
+        .card-setting .icon-circle { background: #fef3c7; color: #d97706; }
+
+        .card h2 {
+            margin: 10px 0;
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+
+        .card p {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .btn-go {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .card:hover .btn-go {
+            background: var(--accent);
+        }
+
+        /* Auth Overlay */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-box {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 85%;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.6rem; }
+            .grid-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">
+        <div class="auth-box">
+            <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
+            <h2 style="margin:0;">Hệ Thống Quản Trị</h2>
+            <p style="color: #64748b;">Nhập mã Admin để tiếp tục</p>
+            <input type="password" id="pass" placeholder="******" onkeypress="if(event.key === 'Enter') verify()">
+            <button onclick="verify()" style="width:100%; padding:15px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">XÁC NHẬN TRUY CẬP</button>
+        </div>
+    </div>
+
+    <div class="dashboard" id="main-content" style="display:none">
+        <div class="header">
+            <h1>TRẠM ĐIỀU HÀNH LỚP 4A</h1>
+            <p>Chào Thầy, mời Thầy lựa chọn chức năng quản lý</p>
+        </div>
+
+        <div class="grid-container">
+            <a href="Teacher_Center.html" class="card card-grading">
+                <div class="icon-circle">📝</div>
+                <h2>Chấm Điểm</h2>
+                <p>Xem ảnh bài làm học sinh, nhận xét và phê duyệt điểm thi.</p>
+                <div class="btn-go">Mở phòng chấm ➔</div>
+            </a>
+
+            <a href="Bang_tong_hop_ket_qua .html" class="card card-report">
+                <div class="icon-circle">📊</div>
+                <h2>Tổng Hợp Kết Quả</h2>
+                <p>Xem bảng điểm tổng, thống kê tỉ lệ và xuất file Excel báo cáo.</p>
+                <div class="btn-go">Xem báo cáo ➔</div>
+            </a>
+
+            <a href="Quan_tri.html" class="card card-setting">
+                <div class="icon-circle">⚙️</div>
+                <h2>Cài Đặt Hệ Thống</h2>
+                <p>Đóng/Mở môn thi, tạo mã Zalo và quản lý danh sách học sinh.</p>
+                <div class="btn-go">Vào quản trị ➔</div>
+            </a>
+        </div>
+
+        <div style="margin-top: 50px; color: #94a3b8; font-size: 0.8rem;">
+            Hệ thống quản lý giáo dục V6.0 - Đã được mã hóa an toàn
+        </div>
+    </div>
+    
+
+    <script>
+        function verify() {
+            const p = document.getElementById('pass').value;
+            if (p === '172108') {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                alert('Mã bảo mật không đúng!');
+            }
+        }
+    </script>
+</body>
+</html>
