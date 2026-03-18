@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Tổng Hợp Điểm V6.0 - Lớp 4A</title>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 20px; font-size: 13px; color:#334155; margin: 0; }
+        .container { max-width: 100%; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        h1 { margin: 0; color: #0284c7; text-transform: uppercase; font-size: 1.4rem; font-weight: 900; }
+        
+        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        input[type="text"], input[type="password"] { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 13px; }
+        
+        button { padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 5px; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-back { background: #64748b; }
+        .btn-refresh { background: #0284c7; }
+        .btn-excel { background: #16a34a; }
+        
+        .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; max-height: 75vh; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+        th, td { border: 1px solid #e2e8f0; padding: 10px 8px; text-align: center; }
+        th { background: #f8fafc; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #cbd5e1; }
+        
+        .col-name { text-align: left; font-weight: bold; min-width: 180px; position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #e2e8f0; }
+        
+        .score-val { font-size: 15px; font-weight: 900; color: #0284c7; }
+        .time-range { font-size: 10px; color: #d97706; display: block; background: #fff7ed; border-radius: 4px; margin-top: 4px; }
+        
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+        .rank-xs { background: #dcfce7; color: #166534; } .rank-tot { background: #dbeafe; color: #1e40af; }
+        .rank-ht { background: #f3f4f6; color: #374151; } .rank-cht { background: #fee2e2; color: #991b1b; }
+
+        #auth-overlay { position: fixed; inset: 0; background: #f1f5f9; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .panel-auth { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid #0284c7; }
+    </style>
+</head>
+<body>
+
+<div id="auth-overlay">
+    <div class="panel-auth">
+        <h2>🔑 Truy cập Bảng Điểm</h2>
+        <input type="password" id="admin-pass" placeholder="Nhập mã Admin...">
+        <button onclick="checkAuth()" style="background:#0284c7; width: 100%; margin-top:10px; justify-content: center;">Xác nhận 🚀</button>
+    </div>
+</div>
+
+<div class="container" id="main-content" style="display:none">
+    <div class="header-box">
+        <h1>📊 TỔNG HỢP & PHÂN TÍCH LỚP 4A</h1>
+        <button class="btn-back" onclick="window.location.href='index.html'">🔙 Trang chủ</button>
+    </div>
+
+    <div class="toolbar">
+        <input type="text" id="search-box" placeholder="🔍 Tìm tên học sinh..." onkeyup="filterTable()">
+        <button class="btn-refresh" onclick="location.reload()">🔄 Làm mới</button>
+        <button class="btn-excel" onclick="exportExcel()">📥 Xuất Excel</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="score-table">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th class="col-name">Họ và Tên</th>
+                    <th>Toán</th><th>Tiếng Việt</th><th>Sử - Địa</th><th>Khoa Học</th>
+                    <th>Đạo Đức</th><th>Công Nghệ</th><th>Mỹ Thuật</th><th>HĐTN</th>
+                    <th style="background:#e0f2fe">Tổng Điểm</th>
+                    <th>Tiến độ</th>
+                    <th>Xếp Loại</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const DB_CONFIG = {
+        apiKey: "AIzaSyA77lLi_JCLIdR535KEfg3S0_Ge2EorPMo",
+        authDomain: "baikiemtracuoiki.firebaseapp.com",
+        projectId: "baikiemtracuoiki",
+        storageBucket: "baikiemtracuoiki.firebasestorage.app",
+        messagingSenderId: "953819948776",
+        appId: "1:953819948776:web:4e9a017a6c5fc10ed28b5d"
+    };
+
+    const SUBJECT_MAP = ["Toán", "Tiếng Việt", "Lịch sử & Địa lý", "Khoa học", "Đạo đức", "Công nghệ", "Mĩ thuật", "Hoạt động trải nghiệm"];
+    const STUDENT_LIST = ["Vũ Việt Anh", "Vũ Gia Bảo", "Lê Thị Liên Chi", "Bùi Anh Dũng", "Vũ Quốc Duy", "Nguyễn Đăng Dương", "Nguyễn Trí Đại", "Lê Bá Đạt", "Nguyễn Văn Đạt", "Phan Minh Quang", "Lê Minh Hạnh", "Vũ Đình Khánh Linh", "Vũ Thị Yến Nhi", "Lê Vũ Chí Thành", "Phạm Hanh Gia Phát", "Lê Anh Thơ", "Vũ Song Vũ", "Vũ Ngọc Huyền", "Lê Gia Khánh", "Nguyễn Đăng Kiên", "Mai Quang Long", "Lê Văn Lộc", "Vũ Anh Minh", "Hoàng Bảo Nam", "Phạm Thị Kim Ngân", "Vũ Thu Ngân", "Đàm Thị Quỳnh Như", "Nguyễn Hoàng Thiên Phúc", "Vũ Quang Phúc", "Nguyễn Nhã Phương", "Nguyễn Thị Quỳnh", "Lê Ngọc Sơn", "Đặng Thị Thanh Tâm", "Vũ Thị Minh Tâm", "Giáo Viên Test"];
+
+    if (!firebase.apps.length) firebase.initializeApp(DB_CONFIG);
+    const db = firebase.firestore();
+
+    function checkAuth() {
+        if (document.getElementById("admin-pass").value === "172108") {
+            document.getElementById("auth-overlay").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+            loadData();
+        } else { alert("Sai mã!"); }
+    }
+
+    async function loadData() {
+        const snapshot = await db.collection("KET_QUA").where("status", "==", "approved").get();
+        const scoresByStudent = {};
+        
+        // Khởi tạo khung
+        STUDENT_LIST.forEach(name => {
+            scoresByStudent[name] = { total: 0, count: 0, subs: {} };
+        });
+
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            if (scoresByStudent[d.student_name]) {
+                const s = d.scores.teacher_final || 0;
+                scoresByStudent[d.student_name].subs[d.subject] = {
+                    score: s,
+                    time: d.timestamp ? d.timestamp.toDate().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : "---"
+                };
+                scoresByStudent[d.student_name].total += s;
+                scoresByStudent[d.student_name].count++;
+            }
+        });
+
+        renderTable(scoresByStudent);
+    }
+
+    function renderTable(data) {
+        const body = document.getElementById("table-body");
+        let i = 1;
+        Object.entries(data).sort((a,b) => b[1].total - a[1].total).forEach(([name, info]) => {
+            let row = `<tr><td>${i++}</td><td class="col-name">${name}</td>`;
+            SUBJECT_MAP.forEach(sub => {
+                if (info.subs[sub]) {
+                    row += `<td><span class="score-val">${info.subs[sub].score}</span><span class="time-range">⌚ ${info.subs[sub].time}</span></td>`;
+                } else { row += `<td style="color:#cbd5e1">-</td>`; }
+            });
+
+            // Xếp loại
+            let label = "Chưa nộp"; let bClass = "rank-cht";
+            if (info.count >= 6) { label = "Hoàn thành"; bClass = "rank-ht"; }
+            if (info.total >= 50) { label = "Tốt"; bClass = "rank-tot"; }
+            if (info.total >= 75) { label = "Xuất Sắc"; bClass = "rank-xs"; }
+
+            row += `<td style="font-weight:900; color:#0284c7">${info.total.toFixed(1)}</td>
+                    <td style="color:${info.count === 8 ? '#16a34a' : '#f59e0b'}">${info.count}/8</td>
+                    <td><span class="badge ${bClass}">${label}</span></td></tr>`;
+            body.innerHTML += row;
+        });
+    }
+
+    function filterTable() {
+        let val = document.getElementById("search-box").value.toUpperCase();
+        let rows = document.getElementById("table-body").getElementsByTagName("tr");
+        for (let r of rows) {
+            let name = r.getElementsByTagName("td")[1].textContent.toUpperCase();
+            r.style.display = name.includes(val) ? "" : "none";
+        }
+    }
+
+    function exportExcel() {
+        const wb = XLSX.utils.table_to_book(document.getElementById("score-table"), {sheet:"KetQua"});
+        XLSX.writeFile(wb, `Bang_Diem_4A_${new Date().toLocaleDateString('vi-VN')}.xlsx`);
+    }
+</script>
+</body>
+</html>

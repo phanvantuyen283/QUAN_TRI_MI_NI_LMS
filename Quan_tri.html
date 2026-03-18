@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang quản trị dành cho HĐKH kiểm tra</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 20px; color: #334155; margin: 0; }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .panel { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-top: 5px solid #0284c7; }
+        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; color: #0f172a; }
+        
+        .p-orange { border-top-color: #f59e0b; } 
+        .p-red { border-top-color: #ef4444; }
+
+        .switch-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        input[type="text"], input[type="password"], select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin-top: 8px; transition: 0.2s; font-size: 14px; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .btn-save { background: #0284c7; } .btn-gen { background: #8b5cf6; }
+        .btn-copy { background: #10b981; } .btn-del { background: #64748b; }
+        .btn-reset { background: #ef4444; } .btn-warn { background: #f59e0b; }
+
+        .code-list { max-height: 250px; overflow-y: auto; background: #0f172a; color: #a3e635; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 14px; margin-top: 10px; border: 1px solid #334155; }
+        .code-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #334155; padding: 6px 0; }
+        .danger-zone { background-color: #fef2f2; border: 1px dashed #fca5a5; padding: 15px; border-radius: 8px; margin-top: 25px; }
+        
+        /* Lớp bảo vệ đăng nhập đơn giản */
+        #auth-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+<div style="background: white; padding: 15px 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin:0; color:#0f172a; font-size: 1.5rem;">⚙️ CÀI ĐẶT HỆ THỐNG</h2>
+        <a href="index.html" style="text-decoration: none; background: #0f172a; color: white; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 14px; transition: 0.3s;">
+            🏠 VỀ BẢNG ĐIỀU KHIỂN
+        </a>
+    </div>
+</div>
+
+    <div id="auth-overlay">
+        <div class="panel" style="width: 300px; text-align: center;">
+            <h2>🔑 Xác thực Admin</h2>
+            <input type="password" id="admin-pass-input" placeholder="Nhập mã bí mật...">
+            <button class="btn-save" onclick="checkAuth()">Vào kiểm tra  🚀</button>
+        </div>
+    </div>
+
+    <h1 style="text-align:center; color:#0f172a; margin-bottom:30px">🎛️ BẢNG ĐIỀU KHIỂN DÀNH CHO HĐKH (TESTER)</h1>
+
+    <div class="admin-grid">
+        <div class="panel">
+            <h2>📚 1. Đóng/Mở Môn Học</h2>
+            <p style="font-size: 13px; color: #64748b; margin-top: -10px;">Chỉ các môn bật xanh học sinh mới nhìn thấy.</p>
+            <div id="subject-config-area">Đang tải danh sách môn...</div>
+            <button class="btn-save" onclick="saveSubjectConfig()">💾 LƯU TRẠNG THÁI MÔN</button>
+        </div>
+
+        <div class="panel p-orange">
+            <h2>🔑 2. Cấp Mã Đăng Nhập Mới</h2>
+            <p style="font-size: 13px; color: #64748b; margin-top: -10px;">Tạo bộ mã ngẫu nhiên cho lớp 4A.</p>
+            <div class="code-list" id="code-display">Chưa có mã. Nhấn Tạo Mã...</div>
+            <div style="display:flex; gap:10px; margin-top:10px">
+                <button class="btn-gen" onclick="generateCodes()">🔄 TẠO MÃ BẢO MẬT</button>
+                <button class="btn-copy" onclick="copyCodes()">📋 COPY GỬI ZALO</button>
+            </div>
+            <button class="btn-del" onclick="deleteCodes()" style="margin-top: 10px;">🚫 ĐÓNG CỔNG</button>
+        </div>
+
+        <div class="panel p-red">
+            <h2>🛡️ 3. Quản Lý Điểm & Cấp Quyền</h2>
+            <div class="switch-row" style="background:#f0fdf4; border-color: #bbf7d0;">
+                <span>Cho phép nộp lại bài cũ?</span>
+                <label class="switch">
+                    <input type="checkbox" id="sw-retake">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <label style="font-weight:bold; font-size:13px; display:block; margin-top: 15px;">Câu hỏi phụ:</label>
+            <input type="text" id="sec-question" placeholder="VD: Cô chủ nhiệm tên gì?">
+            <input type="text" id="sec-answer" placeholder="Đáp án viết liền không dấu">
+            <button class="btn-save" onclick="saveSecurity()" style="background:#0d9488">💾 LƯU BẢO MẬT</button>
+
+            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:25px 0">
+
+            <label style="font-weight:bold; font-size:13px; display:block; color:#b45309;">Xóa bài học sinh:</label>
+            <select id="student-select"><option value="">-- Chọn tên học sinh --</option></select>
+            <button class="btn-warn" onclick="resetStudentData()">🗑️ XÓA BÀI CỦA EM NÀY</button>
+
+            <div class="danger-zone">
+                <button class="btn-reset" onclick="resetAllClassData()">🔥 XÓA SẠCH ĐIỂM CẢ LỚP</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- PHẦN 1: CẤU HÌNH ĐỘC LẬP (THAY THẾ CONFIG.JS) ---
+    const DB_CONFIG = {
+        apiKey: "AIzaSyA77lLi_JCLIdR535KEfg3S0_Ge2EorPMo",
+        authDomain: "baikiemtracuoiki.firebaseapp.com",
+        projectId: "baikiemtracuoiki",
+        storageBucket: "baikiemtracuoiki.firebasestorage.app",
+        messagingSenderId: "953819948776",
+        appId: "1:953819948776:web:4e9a017a6c5fc10ed28b5d"
+    };
+
+    const ADMIN_KEY = "172108";
+    const SUBJECTS = ["Toán", "Tiếng Việt", "Tiếng Anh", "Khoa học", "Lịch sử & Địa lý", "Đạo đức", "Công nghệ", "Hoạt động trải nghiệm", "Mĩ thuật", "Âm nhạc", "Giáo dục thể chất", "Tin học"];
+    const STUDENT_LIST = ["Vũ Việt Anh", "Vũ Gia Bảo", "Lê Thị Liên Chi", "Bùi Anh Dũng", "Vũ Quốc Duy", "Nguyễn Đăng Dương", "Nguyễn Trí Đại", "Lê Bá Đạt", "Nguyễn Văn Đạt", "Phan Minh Quang", "Lê Minh Hạnh", "Vũ Đình Khánh Linh", "Vũ Thị Yến Nhi", "Lê Vũ Chí Thành", "Phạm Hanh Gia Phát", "Lê Anh Thơ", "Vũ Song Vũ", "Vũ Ngọc Huyền", "Lê Gia Khánh", "Nguyễn Đăng Kiên", "Mai Quang Long", "Lê Văn Lộc", "Vũ Anh Minh", "Hoàng Bảo Nam", "Phạm Thị Kim Ngân", "Vũ Thu Ngân", "Đàm Thị Quỳnh Như", "Nguyễn Hoàng Thiên Phúc", "Vũ Quang Phúc", "Nguyễn Nhã Phương", "Nguyễn Thị Quỳnh", "Lê Ngọc Sơn", "Đặng Thị Thanh Tâm", "Vũ Thị Minh Tâm", "Giáo Viên Test"];
+
+    // Khởi tạo Firebase
+    if (!firebase.apps.length) firebase.initializeApp(DB_CONFIG);
+    const db = firebase.firestore();
+
+    // --- PHẦN 2: LOGIC XỬ LÝ ---
+
+    function checkAuth() {
+        const pass = document.getElementById("admin-pass-input").value;
+        if(pass === ADMIN_KEY) {
+            document.getElementById("auth-overlay").style.display = "none";
+            renderUI();
+            loadAllData();
+        } else {
+            alert("Mã Admin không đúng!");
+        }
+    }
+
+    function renderUI() {
+        const area = document.getElementById("subject-config-area");
+        area.innerHTML = SUBJECTS.map((sub, index) => {
+            const safeId = "sub_" + index; 
+            return `<div class="switch-row"><span>${sub}</span><label class="switch"><input type="checkbox" id="${safeId}" data-name="${sub}"><span class="slider"></span></label></div>`;
+        }).join('');
+
+        const sel = document.getElementById("student-select");
+        STUDENT_LIST.forEach(name => {
+            let opt = document.createElement("option"); opt.value = name; opt.innerText = name;
+            sel.appendChild(opt);
+        });
+    }
+
+    async function loadAllData() {
+        try {
+            const snap = await db.collection("CAI_DAT_MON_HOC").doc("status").get();
+            if (snap.exists) {
+                const data = snap.data();
+                SUBJECTS.forEach((sub, index) => {
+                    const safeId = "sub_" + index;
+                    if (data[sub] === true) document.getElementById(safeId).checked = true;
+                });
+            }
+            const codeSnap = await db.collection("BAO_MAT").doc("danh_sach_ma").get();
+            if(codeSnap.exists) renderCodes(codeSnap.data());
+            const confSnap = await db.collection("CAU_HINH").doc("cau_hinh_chung").get();
+            if(confSnap.exists) {
+                document.getElementById("sw-retake").checked = confSnap.data().allow_retake || false;
+                document.getElementById("sec-question").value = confSnap.data().question || "";
+                document.getElementById("sec-answer").value = confSnap.data().answer || "";
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function saveSubjectConfig() {
+        let dataToSave = { admin_key: ADMIN_KEY, updated_at: firebase.firestore.FieldValue.serverTimestamp() };
+        SUBJECTS.forEach((sub, index) => { dataToSave[sub] = document.getElementById("sub_" + index).checked; });
+        try {
+            await db.collection("CAI_DAT_MON_HOC").doc("status").set(dataToSave);
+            alert("✅ Đã lưu trạng thái môn!");
+        } catch(e) { alert("Lỗi: " + e.message); }
+    }
+
+    async function generateCodes() {
+        if(!confirm("Tạo bộ mã mới?")) return;
+        let codes = {}; const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
+        STUDENT_LIST.forEach(s => {
+            let c = ""; for(let i=0; i<6; i++) c += chars.charAt(Math.floor(Math.random() * chars.length));
+            codes[s] = (s === "Giáo Viên Test") ? "123456" : c;
+        });
+        try {
+            await db.collection("BAO_MAT").doc("danh_sach_ma").set({ ...codes, admin_key: ADMIN_KEY });
+            renderCodes(codes); alert("✅ Đã tạo mã mới!");
+        } catch (e) { alert("Lỗi: " + e.message); }
+    }
+
+    function renderCodes(data) {
+        let html = ""; let count = 0;
+        for(let [name, code] of Object.entries(data)) { 
+            if(name !== 'admin_key' && name !== 'updated_at') {
+                html += `<div class="code-item"><span>${name}</span> <b>${code}</b></div>`; count++;
+            }
+        }
+        document.getElementById("code-display").innerHTML = count === 0 ? "🚫 Cổng đang ĐÓNG." : html;
+        window.currentCodes = data;
+    }
+
+    function copyCodes() {
+        if (!window.currentCodes) return alert("Chưa có mã!");
+        let t = "MÃ ĐĂNG NHẬP LỚP 4A:\n";
+        for(let [name, code] of Object.entries(window.currentCodes)) { 
+            if(name !== 'admin_key' && name !== 'updated_at') t += `${name}: ${code}\n`; 
+        }
+        navigator.clipboard.writeText(t); alert("📋 Đã copy!");
+    }
+
+    async function deleteCodes() {
+        if(!confirm("Đóng cổng đăng nhập?")) return;
+        try {
+            await db.collection("BAO_MAT").doc("danh_sach_ma").set({ admin_key: ADMIN_KEY });
+            document.getElementById("code-display").innerHTML = "🚫 Cổng đã đóng.";
+            alert("🔒 Đã khóa hệ thống!");
+        } catch (e) { alert("Lỗi: " + e.message); }
+    }
+
+    async function saveSecurity() {
+        const data = {
+            allow_retake: document.getElementById("sw-retake").checked,
+            question: document.getElementById("sec-question").value.trim(),
+            answer: document.getElementById("sec-answer").value.trim().toLowerCase(),
+            admin_key: ADMIN_KEY
+        };
+        try {
+            await db.collection("CAU_HINH").doc("cau_hinh_chung").set(data);
+            alert("✅ Đã lưu bảo mật!");
+        } catch(e) { alert("Lỗi: " + e.message); }
+    }
+
+    async function resetStudentData() {
+        const name = document.getElementById("student-select").value;
+        if(!name || !confirm(`Xóa toàn bộ bài của ${name}?`)) return;
+        try {
+            const snap = await db.collection("KET_QUA").where("student_name", "==", name).get();
+            const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref));
+            await batch.commit(); alert(`🗑️ Đã xóa bài của ${name}`);
+        } catch(e) { alert("Lỗi: " + e.message); }
+    }
+
+    async function resetAllClassData() {
+        if(!confirm("XÓA SẠCH TOÀN BỘ ĐIỂM CẢ LỚP?")) return;
+        const pass = prompt("Nhập mã ADMIN để xác nhận:");
+        if(pass !== ADMIN_KEY) return alert("Sai mã!");
+        try {
+            document.body.style.cursor = "wait";
+            const snap = await db.collection("KET_QUA").get();
+            let batch = db.batch(); snap.docs.forEach((doc) => batch.delete(doc.ref));
+            await batch.commit(); alert(`🔥 Hệ thống đã sạch sẽ!`);
+        } catch(e) { alert("Lỗi: " + e.message); } finally { document.body.style.cursor = "default"; }
+    }
+</script>
+</body>
+</html>

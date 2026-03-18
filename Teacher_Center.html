@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Giáo Viên Độc Lập V6.0</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { --primary: #0284c7; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        header { background: white; padding: 15px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; margin-bottom: 20px; border-radius: 10px; }
+        .exam-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); }
+        .dynamic-section { margin-top: 15px; background: #f1f5f9; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .student-img { max-width: 100%; max-height: 450px; border-radius: 8px; margin-top: 10px; cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid white; }
+        .input-score { width: 80px; padding: 10px; border: 2px solid var(--primary); border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; color: #dc2626; }
+        .text-feedback { width: 100%; height: 70px; padding: 10px; margin-top: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; resize: vertical; box-sizing: border-box; }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e2e8f0; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-approved { background: #dcfce7; color: #166534; }
+        .final-panel { background: #fffbeb; padding: 20px; border-radius: 10px; margin-top: 20px; border: 2px dashed #f59e0b; }
+        .btn-approve { background: #10b981; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; }
+        #auth-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+<div style="position: sticky; top: 0; z-index: 1000; background: #fff; padding: 10px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px;">
+    <a href="index.html" style="text-decoration: none; background: #64748b; color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 5px;">
+        🏠 QUAY LẠI DASHBOARD
+    </a>
+    <span style="color: #0284c7; font-weight: 800;">📝 PHÒNG CHẤM ĐIỂM V6.0</span>
+</div>
+
+    <div id="auth-overlay">
+        <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 300px;">
+            <h2 style="color: var(--primary); margin-top: 0;">👨‍🏫 Xác thực Thầy Cô</h2>
+            <input type="password" id="admin-pass" placeholder="Nhập mã Admin..." style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+            <button onclick="checkAuth()" style="width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">VÀO PHÒNG CHẤM BÀI</button>
+        </div>
+    </div>
+
+    <header>
+        <h2 style="margin:0; color: var(--primary);">🌟 PHÒNG CHẤM BÀI V6.0</h2>
+        <div id="stats" style="font-weight: bold; color: #64748b;">Đang tải...</div>
+    </header>
+
+    <div id="exam-list" style="max-width: 900px; margin: 0 auto;">
+        <div style="text-align: center; padding: 50px;">⏳ Đang kết nối dữ liệu lớp học...</div>
+    </div>
+
+<script>
+    // --- CẤU HÌNH FIREBASE ĐỘC LẬP ---
+    const DB_CONFIG = {
+        apiKey: "AIzaSyA77lLi_JCLIdR535KEfg3S0_Ge2EorPMo",
+        authDomain: "baikiemtracuoiki.firebaseapp.com",
+        projectId: "baikiemtracuoiki",
+        storageBucket: "baikiemtracuoiki.firebasestorage.app",
+        messagingSenderId: "953819948776",
+        appId: "1:953819948776:web:4e9a017a6c5fc10ed28b5d"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(DB_CONFIG);
+    const db = firebase.firestore();
+
+    function checkAuth() {
+        if (document.getElementById("admin-pass").value === "172108") {
+            document.getElementById("auth-overlay").style.display = "none";
+            initListener();
+        } else { alert("Sai mã bảo mật!"); }
+    }
+
+    function initListener() {
+        db.collection("KET_QUA").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+            const container = document.getElementById("exam-list");
+            document.getElementById("stats").innerText = `Tổng số: ${snapshot.size} bài`;
+            container.innerHTML = snapshot.empty ? "<div class='exam-card' style='text-align:center'>📭 Chưa có bài nộp nào.</div>" : "";
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const card = document.createElement("div");
+                card.className = "exam-card";
+
+                // Xử lý hiển thị điểm trắc nghiệm
+                let sysScore = data.scores.sys || 0;
+                let sysMax = data.scores.sys_max || 0;
+
+                // Xử lý hiển thị ảnh Multimedia
+                let multiHtml = "";
+                if (data.multimedia_urls) {
+                    for (let qId in data.multimedia_urls) {
+                        multiHtml += `
+                            <div class="dynamic-section">
+                                <p>📸 <b>Ảnh bài làm (Câu ${qId}):</b></p>
+                                <a href="${data.multimedia_urls[qId]}" target="_blank"><img src="${data.multimedia_urls[qId]}" class="student-img"></a>
+                            </div>`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="margin:0;">👤 ${data.student_name} <span class="badge">${data.subject}</span></h3>
+                        <span class="badge ${data.status === 'approved' ? 'badge-approved' : 'badge-pending'}">
+                            ${data.status === 'approved' ? '✅ Đã duyệt' : '⏳ Chờ chấm'}
+                        </span>
+                    </div>
+                    <p style="font-size:12px; color:#94a3b8;">Nộp lúc: ${data.timestamp?.toDate().toLocaleString() || 'Đang gửi...'}</p>
+                    
+                    <div class="dynamic-section">
+                        <b>⚙️ Trắc nghiệm (Máy chấm):</b> <span style="color:var(--primary)">${sysScore}/${sysMax} điểm</span>
+                    </div>
+
+                    ${multiHtml}
+
+                    <div class="final-panel">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>TỔNG ĐIỂM CUỐI CÙNG:</b>
+                            <input type="number" id="score-${doc.id}" class="input-score" value="${data.scores.teacher_final || (sysScore + (data.scores.ai_draft || 0))}">
+                        </div>
+                        <textarea id="fb-${doc.id}" class="text-feedback" placeholder="Thầy ghi nhận xét cho em vào đây...">${data.feedback.teacher_final || ""}</textarea>
+                        <button class="btn-approve" onclick="approveExam('${doc.id}')">💾 LƯU ĐIỂM & DUYỆT BÀI</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
+    }
+
+    window.approveExam = async function(docId) {
+        const score = parseFloat(document.getElementById(`score-${docId}`).value);
+        const feedback = document.getElementById(`fb-${docId}`).value;
+        
+        try {
+            await db.collection("KET_QUA").doc(docId).update({
+                "status": "approved",
+                "scores.teacher_final": score,
+                "feedback.teacher_final": feedback
+            });
+            alert("✅ Đã lưu kết quả thành công!");
+        } catch (e) { alert("Lỗi: " + e.message); }
+    };
+</script>
+</body>
+</html>
