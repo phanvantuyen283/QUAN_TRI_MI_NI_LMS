@@ -3,177 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Trị Lớp 4A</title>
+    <title>Trạm Điều Hành Lớp 4A</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --primary: #0f172a;
-            --accent: #0284c7;
-            --bg: #f1f5f9;
+            --accent: #0ea5e9;
+            --bg: #f8fafc;
+            /* Các màu sáng mới */
+            --color-grading: linear-gradient(135deg, #0ea5e9, #2563eb);
+            --color-report: linear-gradient(135deg, #10b981, #059669);
+            --color-setting: linear-gradient(135deg, #f59e0b, #d97706);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--bg);
             margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+            background-size: 40px 40px;
         }
 
         .dashboard {
-            width: 90%;
-            max-width: 1000px;
+            width: 95%;
+            max-width: 1100px;
             text-align: center;
+            padding: 40px 0;
         }
 
         .header {
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         .header h1 {
             color: var(--primary);
             font-weight: 800;
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             margin: 0;
-            text-transform: uppercase;
-            letter-spacing: -1px;
+            letter-spacing: -1.5px;
+            background: linear-gradient(to right, #0f172a, #334155);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .header p {
             color: #64748b;
             font-size: 1.1rem;
+            margin-top: 10px;
         }
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
             padding: 10px;
         }
 
         .card {
             background: white;
-            padding: 40px 30px;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            padding: 45px 30px;
+            border-radius: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-decoration: none;
             display: flex;
             flex-direction: column;
             align-items: center;
-            border: 1px solid rgba(255,255,255,0.8);
+            border: 1px solid #f1f5f9;
             position: relative;
-            overflow: hidden;
         }
 
         .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 30px -10px rgba(2, 132, 199, 0.2);
-            border-color: var(--accent);
+            transform: translateY(-12px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            border-color: #e2e8f0;
         }
 
         .icon-circle {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
+            width: 90px;
+            height: 90px;
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
-            margin-bottom: 20px;
-            transition: 0.3s;
+            font-size: 45px;
+            margin-bottom: 25px;
+            transition: transform 0.3s;
         }
 
-        /* Màu sắc riêng cho từng nút */
-        .card-grading .icon-circle { background: #e0f2fe; color: #0284c7; }
-        .card-report .icon-circle { background: #dcfce7; color: #16a34a; }
-        .card-setting .icon-circle { background: #fef3c7; color: #d97706; }
+        .card:hover .icon-circle {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Màu sắc biểu tượng */
+        .card-grading .icon-circle { background: #f0f9ff; color: #0ea5e9; }
+        .card-report .icon-circle { background: #f0fdf4; color: #10b981; }
+        .card-setting .icon-circle { background: #fffbeb; color: #f59e0b; }
 
         .card h2 {
             margin: 10px 0;
             color: var(--primary);
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            font-weight: 700;
         }
 
         .card p {
             color: #64748b;
             font-size: 0.95rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            margin-bottom: 10px;
         }
 
+        /* Nâng cấp Nút bấm chuyên nghiệp */
         .btn-go {
-            margin-top: 20px;
-            padding: 10px 25px;
-            background: var(--primary);
+            margin-top: auto;
+            padding: 14px 35px;
             color: white;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: 0.3s;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
+
+        .card-grading .btn-go { background: var(--color-grading); }
+        .card-report .btn-go { background: var(--color-report); }
+        .card-setting .btn-go { background: var(--color-setting); }
 
         .card:hover .btn-go {
-            background: var(--accent);
-        }
-
-        /* Auth Overlay */
-        #auth-overlay {
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .auth-box {
-            background: white;
-            padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 85%;
-        }
-
-        input[type="password"] {
-            width: 100%;
-            padding: 15px;
-            margin: 20px 0;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 1.2rem;
-            letter-spacing: 5px;
-            box-sizing: border-box;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+            filter: brightness(1.1);
         }
 
         @media (max-width: 600px) {
-            .header h1 { font-size: 1.6rem; }
+            .header h1 { font-size: 1.8rem; }
             .grid-container { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <div id="auth-overlay">
-        <div class="auth-box">
-            <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
-            <h2 style="margin:0;">Hệ Thống Quản Trị</h2>
-            <p style="color: #64748b;">Nhập mã Admin để tiếp tục</p>
-            <input type="password" id="pass" placeholder="******" onkeypress="if(event.key === 'Enter') verify()">
-            <button onclick="verify()" style="width:100%; padding:15px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">XÁC NHẬN TRUY CẬP</button>
-        </div>
-    </div>
-
-    <div class="dashboard" id="main-content" style="display:none">
+    <div class="dashboard" id="main-content">
         <div class="header">
             <h1>TRẠM ĐIỀU HÀNH LỚP 4A</h1>
             <p>Chào Thầy, mời Thầy lựa chọn chức năng quản lý</p>
@@ -190,34 +169,22 @@
             <a href="Bang_tong_hop_ket_qua .html" class="card card-report">
                 <div class="icon-circle">📊</div>
                 <h2>Tổng Hợp Kết Quả</h2>
-                <p>Xem bảng điểm tổng, thống kê tỉ lệ và xuất file Excel báo cáo.</p>
+                <p>Xem bảng điểm tổng, thống kê tỉ lệ và xuất báo cáo Excel.</p>
                 <div class="btn-go">Xem báo cáo ➔</div>
             </a>
 
             <a href="Quan_tri.html" class="card card-setting">
                 <div class="icon-circle">⚙️</div>
                 <h2>Cài Đặt Hệ Thống</h2>
-                <p>Đóng/Mở môn thi, tạo mã Zalo và quản lý danh sách học sinh.</p>
+                <p>Đóng/Mở môn thi, tạo mã Zalo và quản lý danh sách lớp.</p>
                 <div class="btn-go">Vào quản trị ➔</div>
             </a>
         </div>
 
-        <div style="margin-top: 50px; color: #94a3b8; font-size: 0.8rem;">
-            Hệ thống quản lý giáo dục V6.0 - Đã được mã hóa an toàn
+        <div style="margin-top: 60px; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">
+            HỆ THỐNG QUẢN TRỊ GIÁO DỤC V6.0 PRO
         </div>
     </div>
-    
 
-    <script>
-        function verify() {
-            const p = document.getElementById('pass').value;
-            if (p === '172108') {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-            } else {
-                alert('Mã bảo mật không đúng!');
-            }
-        }
-    </script>
 </body>
 </html>
