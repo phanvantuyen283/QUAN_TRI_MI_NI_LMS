@@ -36,12 +36,10 @@
         .code-list { max-height: 250px; overflow-y: auto; background: #0f172a; color: #a3e635; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 14px; margin-top: 10px; border: 1px solid #334155; }
         .code-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #334155; padding: 6px 0; }
         .danger-zone { background-color: #fef2f2; border: 1px dashed #fca5a5; padding: 15px; border-radius: 8px; margin-top: 25px; }
-        
-        /* Lớp bảo vệ đăng nhập đơn giản */
-        #auth-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 9999; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
+
 <div style="background: white; padding: 15px 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px;">
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
         <h2 style="margin:0; color:#0f172a; font-size: 1.5rem;">⚙️ CÀI ĐẶT HỆ THỐNG</h2>
@@ -51,64 +49,56 @@
     </div>
 </div>
 
-    <div id="auth-overlay">
-        <div class="panel" style="width: 300px; text-align: center;">
-            <h2>🔑 Xác thực Admin</h2>
-            <input type="password" id="admin-pass-input" placeholder="Nhập mã bí mật...">
-            <button class="btn-save" onclick="checkAuth()">Vào kiểm tra  🚀</button>
-        </div>
+<h1 style="text-align:center; color:#0f172a; margin-bottom:30px">🎛️ BẢNG ĐIỀU KHIỂN DÀNH CHO HĐKH (TESTER)</h1>
+
+<div class="admin-grid">
+    <div class="panel">
+        <h2>📚 1. Đóng/Mở Môn Học</h2>
+        <p style="font-size: 13px; color: #64748b; margin-top: -10px;">Chỉ các môn bật xanh học sinh mới nhìn thấy.</p>
+        <div id="subject-config-area">Đang tải danh sách môn...</div>
+        <button class="btn-save" onclick="saveSubjectConfig()">💾 LƯU TRẠNG THÁI MÔN</button>
     </div>
 
-    <h1 style="text-align:center; color:#0f172a; margin-bottom:30px">🎛️ BẢNG ĐIỀU KHIỂN DÀNH CHO HĐKH (TESTER)</h1>
+    <div class="panel p-orange">
+        <h2>🔑 2. Cấp Mã Đăng Nhập Mới</h2>
+        <p style="font-size: 13px; color: #64748b; margin-top: -10px;">Tạo bộ mã ngẫu nhiên cho lớp 4A.</p>
+        <div class="code-list" id="code-display">Đang tải mã bảo mật...</div>
+        <div style="display:flex; gap:10px; margin-top:10px">
+            <button class="btn-gen" onclick="generateCodes()">🔄 TẠO MÃ BẢO MẬT</button>
+            <button class="btn-copy" onclick="copyCodes()">📋 COPY GỬI ZALO</button>
+        </div>
+        <button class="btn-del" onclick="deleteCodes()" style="margin-top: 10px;">🚫 ĐÓNG CỔNG</button>
+    </div>
 
-    <div class="admin-grid">
-        <div class="panel">
-            <h2>📚 1. Đóng/Mở Môn Học</h2>
-            <p style="font-size: 13px; color: #64748b; margin-top: -10px;">Chỉ các môn bật xanh học sinh mới nhìn thấy.</p>
-            <div id="subject-config-area">Đang tải danh sách môn...</div>
-            <button class="btn-save" onclick="saveSubjectConfig()">💾 LƯU TRẠNG THÁI MÔN</button>
+    <div class="panel p-red">
+        <h2>🛡️ 3. Quản Lý Điểm & Cấp Quyền</h2>
+        <div class="switch-row" style="background:#f0fdf4; border-color: #bbf7d0;">
+            <span>Cho phép nộp lại bài cũ?</span>
+            <label class="switch">
+                <input type="checkbox" id="sw-retake">
+                <span class="slider"></span>
+            </label>
         </div>
 
-        <div class="panel p-orange">
-            <h2>🔑 2. Cấp Mã Đăng Nhập Mới</h2>
-            <p style="font-size: 13px; color: #64748b; margin-top: -10px;">Tạo bộ mã ngẫu nhiên cho lớp 4A.</p>
-            <div class="code-list" id="code-display">Chưa có mã. Nhấn Tạo Mã...</div>
-            <div style="display:flex; gap:10px; margin-top:10px">
-                <button class="btn-gen" onclick="generateCodes()">🔄 TẠO MÃ BẢO MẬT</button>
-                <button class="btn-copy" onclick="copyCodes()">📋 COPY GỬI ZALO</button>
-            </div>
-            <button class="btn-del" onclick="deleteCodes()" style="margin-top: 10px;">🚫 ĐÓNG CỔNG</button>
-        </div>
+        <label style="font-weight:bold; font-size:13px; display:block; margin-top: 15px;">Câu hỏi phụ:</label>
+        <input type="text" id="sec-question" placeholder="VD: Cô chủ nhiệm tên gì?">
+        <input type="text" id="sec-answer" placeholder="Đáp án viết liền không dấu">
+        <button class="btn-save" onclick="saveSecurity()" style="background:#0d9488">💾 LƯU BẢO MẬT</button>
 
-        <div class="panel p-red">
-            <h2>🛡️ 3. Quản Lý Điểm & Cấp Quyền</h2>
-            <div class="switch-row" style="background:#f0fdf4; border-color: #bbf7d0;">
-                <span>Cho phép nộp lại bài cũ?</span>
-                <label class="switch">
-                    <input type="checkbox" id="sw-retake">
-                    <span class="slider"></span>
-                </label>
-            </div>
+        <hr style="border:0; border-top:1px dashed #cbd5e1; margin:25px 0">
 
-            <label style="font-weight:bold; font-size:13px; display:block; margin-top: 15px;">Câu hỏi phụ:</label>
-            <input type="text" id="sec-question" placeholder="VD: Cô chủ nhiệm tên gì?">
-            <input type="text" id="sec-answer" placeholder="Đáp án viết liền không dấu">
-            <button class="btn-save" onclick="saveSecurity()" style="background:#0d9488">💾 LƯU BẢO MẬT</button>
+        <label style="font-weight:bold; font-size:13px; display:block; color:#b45309;">Xóa bài học sinh:</label>
+        <select id="student-select"><option value="">-- Chọn tên học sinh --</option></select>
+        <button class="btn-warn" onclick="resetStudentData()">🗑️ XÓA BÀI CỦA EM NÀY</button>
 
-            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:25px 0">
-
-            <label style="font-weight:bold; font-size:13px; display:block; color:#b45309;">Xóa bài học sinh:</label>
-            <select id="student-select"><option value="">-- Chọn tên học sinh --</option></select>
-            <button class="btn-warn" onclick="resetStudentData()">🗑️ XÓA BÀI CỦA EM NÀY</button>
-
-            <div class="danger-zone">
-                <button class="btn-reset" onclick="resetAllClassData()">🔥 XÓA SẠCH ĐIỂM CẢ LỚP</button>
-            </div>
+        <div class="danger-zone">
+            <button class="btn-reset" onclick="resetAllClassData()">🔥 XÓA SẠCH ĐIỂM CẢ LỚP</button>
         </div>
     </div>
+</div>
 
 <script>
-    // --- PHẦN 1: CẤU HÌNH ĐỘC LẬP (THAY THẾ CONFIG.JS) ---
+    // --- PHẦN 1: CẤU HÌNH ---
     const DB_CONFIG = {
         apiKey: "AIzaSyA77lLi_JCLIdR535KEfg3S0_Ge2EorPMo",
         authDomain: "baikiemtracuoiki.firebaseapp.com",
@@ -126,26 +116,23 @@
     if (!firebase.apps.length) firebase.initializeApp(DB_CONFIG);
     const db = firebase.firestore();
 
-    // --- PHẦN 2: LOGIC XỬ LÝ ---
+    // --- PHẦN 2: TỰ ĐỘNG CHẠY KHI TRANG TẢI XONG ---
+    window.onload = function() {
+        renderUI();
+        loadAllData();
+    };
 
-    function checkAuth() {
-        const pass = document.getElementById("admin-pass-input").value;
-        if(pass === ADMIN_KEY) {
-            document.getElementById("auth-overlay").style.display = "none";
-            renderUI();
-            loadAllData();
-        } else {
-            alert("Mã Admin không đúng!");
-        }
-    }
+    // --- PHẦN 3: LOGIC XỬ LÝ ---
 
     function renderUI() {
+        // Vẽ danh sách môn học
         const area = document.getElementById("subject-config-area");
         area.innerHTML = SUBJECTS.map((sub, index) => {
             const safeId = "sub_" + index; 
             return `<div class="switch-row"><span>${sub}</span><label class="switch"><input type="checkbox" id="${safeId}" data-name="${sub}"><span class="slider"></span></label></div>`;
         }).join('');
 
+        // Đổ danh sách học sinh vào ô chọn xóa bài
         const sel = document.getElementById("student-select");
         STUDENT_LIST.forEach(name => {
             let opt = document.createElement("option"); opt.value = name; opt.innerText = name;
@@ -155,6 +142,7 @@
 
     async function loadAllData() {
         try {
+            // Tải trạng thái môn học
             const snap = await db.collection("CAI_DAT_MON_HOC").doc("status").get();
             if (snap.exists) {
                 const data = snap.data();
@@ -163,15 +151,18 @@
                     if (data[sub] === true) document.getElementById(safeId).checked = true;
                 });
             }
+            // Tải danh sách mã bảo mật
             const codeSnap = await db.collection("BAO_MAT").doc("danh_sach_ma").get();
             if(codeSnap.exists) renderCodes(codeSnap.data());
+            
+            // Tải cấu hình chung
             const confSnap = await db.collection("CAU_HINH").doc("cau_hinh_chung").get();
             if(confSnap.exists) {
                 document.getElementById("sw-retake").checked = confSnap.data().allow_retake || false;
                 document.getElementById("sec-question").value = confSnap.data().question || "";
                 document.getElementById("sec-answer").value = confSnap.data().answer || "";
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Lỗi tải dữ liệu:", e); }
     }
 
     async function saveSubjectConfig() {
